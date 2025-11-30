@@ -5,6 +5,8 @@ import java.util.Scanner;
 
 public class Main {
     private static final int MAX_LINE_SIZE = 1024;
+    private static final String YANDEX_BOT = "YandexBot";
+    private static final String GOOGLE_BOT = "Googlebot";
 
     public static void main(String[] args) {
     /*    System.out.println("Введите текст и нажмите <Enter>: " );
@@ -40,8 +42,8 @@ public class Main {
                     BufferedReader reader =
                             new BufferedReader(fileReader);
                     int linesCount = 0;
-                    int maxLength = 0;
-                    int minLength = -1;
+                    int yandexBots = 0;
+                    int googleBots = 0;
                     String line;
                     while ((line = reader.readLine()) != null) {
                         int length = line.length();
@@ -49,17 +51,22 @@ public class Main {
                         if (length > MAX_LINE_SIZE) {
                             throw new InvalidLineException(linesCount, length, MAX_LINE_SIZE);
                         }
-                        if (length > maxLength) {
-                            maxLength = length;
+                        String userAgent = extractUserAgent(line);
+                        String agentName = extractUserAgentName(userAgent);
+
+                        if(YANDEX_BOT.equals(agentName))
+                        {
+                            yandexBots++;
                         }
-                        if (length < minLength || minLength == -1) {
-                            minLength = length;
+                        else if(GOOGLE_BOT.equals(agentName))
+                        {
+                            googleBots++;
                         }
                     }
 
                     System.out.println("Общее число строк в файле: " + linesCount);
-                    System.out.println("Длина самой короткой строки: " + minLength);
-                    System.out.println("Длина самой длинной строки: " + maxLength);
+                    System.out.println("Количество запросов от YandexBot: " + yandexBots);
+                    System.out.println("Количество запросов от GoogleBot: " + googleBots);
 
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -70,4 +77,37 @@ public class Main {
             }
         }
     }
+
+    public static String extractUserAgent(String line) {
+        int lastQuoteStart = line.lastIndexOf('"');
+        if(lastQuoteStart >= 0)
+        {
+            int secondLastQuoteStart = line.lastIndexOf('"', lastQuoteStart - 1);
+            if(secondLastQuoteStart >= 0)
+            {
+                return line.substring(secondLastQuoteStart + 1, lastQuoteStart);
+            }
+        }
+        return "";
+    }
+
+    public static String extractUserAgentName(String userAgent) {
+
+        String[] parts = userAgent.split(";");
+        String targetPart;
+
+        if (parts.length >= 2) {
+            targetPart = parts[parts.length-2].trim();
+        } else {
+            return "";
+        }
+
+        int slashIndex = targetPart.indexOf('/');
+        if (slashIndex != -1) {
+            return targetPart.substring(0, slashIndex);
+        } else {
+            return targetPart;
+        }
+    }
+
 }
